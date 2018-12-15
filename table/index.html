@@ -9,23 +9,40 @@
     <style></style>
     <div>
       <h1>Расписание рейсов Аэропорта Санкт-Петерубрг "Пулково" (LED)</h1>
+      <label for="flightnum">Поиск по номеру рейса</label>
+      <input id="flightnum" type="text" name="flightnum" value="" />
     </div>
     <div>
       <table id="table" style="width:100%">
-        <tr>
-          <td colspan="5">
-            <select id="myselect" name="myselect">
-              <option value="Departure">Отправление</option>
-              <option value="Arrival">Прибытие</option>
+        <tr class="selector">
+          <td colspan="2">
+            <label for="myselectdir">Направление</label>
+            <select id="myselectdir" name="myselectdir">
+              <option value="departure">Отправление</option>
+              <option value="arrival">Прибытие</option>
             </select>
+          </td>
+          <td colspan="2">
+            <label for="myselectrows">Количество рейсов</label>
+            <select id="myselectrows" name="myselectrows">
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+              <option value="allRows">Все</option>
+            </select>
+          </td>
+          <td colspan="2">
+            <label for="pending">Показать только задержанные</label
+            ><input id="pending" type="checkbox" name="pending" />
           </td>
         </tr>
         <tr>
           <th>Время</th>
-          <th>Пункт назначения</th>
+          <th>Маршрут</th>
           <th>Номер рейса</th>
           <th>Авиакомпания</th>
           <th>Модель самолёта</th>
+          <th>Статус рейса</th>
         </tr>
       </table>
     </div>
