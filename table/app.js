@@ -40,8 +40,19 @@ const getTableArr = async () => {
 };
 getTableDep();
 getTableArr(); */ // part of the app for using real API
+//* лишний код удаляй
 
 function init() {
+  loadJSON("scheduleArr.json", function(data) {
+    jsonResponseArr = data;
+
+    loadJSON("scheduleDep.json", function(data) {
+      jsonResponseDep = data;
+
+      drawTable(direction, rows, flightStatus, searchValue);
+    });
+  });
+
   document.addEventListener(
     "DOMContentLoaded",
     function() {
@@ -52,19 +63,13 @@ function init() {
     },
     false
   );
-
-  loadJSON("scheduleArr.json", function(data) {
-    jsonresponseArr = data;
-
-    loadJSON("scheduleDep.json", function(data) {
-      jsonresponseDep = data;
-
-      drawTable(direction, rows);
-    });
-  });
 }
 
-var jsonresponseDep, jsonresponseArr, jsonResponseType;
+// default values
+var direction = "departure";
+var rows = 10;
+var flightStatus = false;
+var searchValue;
 
 function loadJSON(url, callback) {
   var request = new XMLHttpRequest();
@@ -79,153 +84,115 @@ function loadJSON(url, callback) {
   request.send(null);
 }
 
-var direction = "departure"; // значения по умолчанию
-var rows = 10;
-var status = "all";
-var value;
-
-function drawTable(direction, rows, status, value) {
-  if (value) {
-    // если введено значение в окно поиска
-    document.getElementById("myselectrows").value = "allRows"; // показываем поиск во всей выборке
+function drawTable(direction, rows, flightStatus, searchValue) {
+  clearTable(); // always delete old table before adding new
+  if (searchValue) {
+    // if there is something in the searchbox
+    document.getElementById("myselectrows").value = "allRows"; // indicate results for all rows
   } else {
-    document.getElementById("myselectrows").value = rows; // если нет, то показываем заданное кол-во рядов
+    // if no indicate current rows value
+    document.getElementById("myselectrows").value =
+      rows <= 50 ? rows : "allRows";
   }
-  var flightInfoArr = searchEngine(direction, status, value); // массив значений после обработки поиском и сортировкой
+  var flightInfoArr = searchEngine(direction, flightStatus, searchValue); // array after sorting and searching
   var tbl = document.getElementById("table");
-  tbl.style.border = "1px solid black";
-  var actualRows; // проверяем, если количество рядов меньше выбранного, то используем его
-  if (flightInfoArr.length < rows) {
-    actualRows = flightInfoArr.length;
-  } else {
-    actualRows = rows;
-  }
+  //tbl.style.border = "1px solid black";
+  var actualRows = flightInfoArr.length < rows ? flightInfoArr.length : rows; // checking an actual rows value. if it's less than rows from input using counted value
   for (var k = 0; k < actualRows; k++) {
     var arr = [];
     var f = flightInfoArr[k];
-    arr.push(f.time, f.city, f.num, f.aviaCompany, f.planeModel, f.statusMsg); // создаём короткий массив из свойств объекта
-    var tr = tbl.insertRow(); // рисуем ряды
+    arr.push(f.time, f.city, f.num, f.aviaCompany, f.planeModel, f.statusMsg); // creating small array from object properties
+    var tr = tbl.insertRow(); // adding rows
+    tr.className = k % 2 == 0 ? "even" : "odd";
     for (var j = 0; j < 6; j++) {
-      var td = tr.insertCell(); // добавляем ячейки
-      td.style.border = "1px solid black";
-      td.appendChild(document.createTextNode(arr[j])); // заполняем ячейки из массива
+      var td = tr.insertCell(); // adding cells
+      td.className = `col${j + 1}`;
+      td.style.border = "1px dotted gray";
+      td.appendChild(document.createTextNode(arr[j])); // filling the cells from the small array
     }
   }
-  if (tr) tbl.appendChild(tr);
-} // рисуем таблицу
+}
 
-function clearTable(oldRows) {
+// we have one predefined row in table so, we have to always exclude one row from the count
+function clearTable() {
+  var oldRows =
+    document.getElementById("table").getElementsByTagName("tr").length - 1;
   var tbl = document.getElementById("table");
   for (var i = oldRows; i > 1; i--) {
     tbl.deleteRow(i);
   }
-} // полностью очищаем таблицу
-
-function sorting(direction, status) {
-  var flightInfoArr = [];
-  var r = getNumberOfFlights(direction);
-  if (status == "pending") {
-    // сортировка в случае если поставлена галочка только задержанные
-    for (i = 0; i < r; i++) {
-      var index = i;
-      var pendingFlight = getFlightInfo(direction, index);
-      if (pendingFlight.statusMsg == "Рейс задерживается") {
-        flightInfoArr.push(pendingFlight);
-      }
-    }
-    return flightInfoArr;
-  } else {
-    // если нет, то возвращаем все
-    for (i = 0; i < r; i++) {
-      var index = i;
-      flightInfoArr.push(getFlightInfo(direction, index));
-    }
-    return flightInfoArr;
-  }
 }
 
-function searchEngine(direction, status, value) {
+function sorting(direction, flightStatus) {
   var flightInfoArr = [];
-  var flightNum = sorting(direction, status); // ищем по тому что отсортировали
-  if (value) {
-    // если что-то введено в поисковое окно
-    var r = flightNum.length;
-    value = value.toLowerCase(); // делаем поиск нечуствительным к регистру
+  var r = getNumberOfFlights(direction);
+  for (i = 0; i < r; i++) {
+    var flight = getFlightInfo(direction, i);
+    if (flightStatus) {
+      if (flight.statusMsg == "Рейс задерживается") {
+        flightInfoArr.push(flight);
+      }
+    } else {
+      flightInfoArr.push(flight);
+    }
+  }
+  return flightInfoArr;
+}
+
+function searchEngine(direction, flightStatus, searchValue) {
+  var flightInfoArr = [];
+  var flightTempArr = sorting(direction, flightStatus); // find the match in the sorted array
+  if (searchValue) {
+    // if there is something input in searchbox
+    var r = flightTempArr.length;
+    searchValue = searchValue.toLowerCase(); // case insensitive search
     for (i = 0; i < r; i++) {
-      var str = flightNum[i].num.toLowerCase(); // делаем поиск нечуствительным к регистру
-      if (str.includes(value)) {
-        flightInfoArr.push(flightNum[i]);
+      var str = flightTempArr[i].num.toLowerCase(); // case insensitive search
+      if (str.includes(searchValue)) {
+        flightInfoArr.push(flightTempArr[i]);
       }
     }
-    return flightInfoArr; // возвращаем массив с финальным результатом
   } else {
-    flightInfoArr = flightNum;
-    return flightInfoArr;
+    flightInfoArr = flightTempArr;
   }
+  return flightInfoArr;
 }
 
 function onSearchBox(e) {
-  if (e.which || e.keyCode || e.keyCode == 8 || e.keyCode == 46) {
-    // это ещё надо проверить, чтобы поиск шёл
-    value = this.value; // только после нажатий букв цифр, backspace и delete
-    oldRows =
-      document.getElementById("table").getElementsByTagName("tr").length - 1;
-    clearTable(oldRows);
-    drawTable(direction, rows, status, value);
+  document.getElementById("pending").checked = false;
+  if (e.which || e.keyCode) {
+    searchValue = this.value;
+    drawTable(direction, rows, flightStatus, searchValue);
   }
 }
 
 function onChangeDirMenu(e) {
-  direction = this.value; // меняем направление
-  oldRows =
-    document.getElementById("table").getElementsByTagName("tr").length - 1;
-  clearTable(oldRows);
-  drawTable(direction, rows, status, value);
+  document.getElementById("pending").checked = false;
+  direction = this.value;
+  drawTable(direction, rows, flightStatus, searchValue);
 }
 
 function onChangeRowsMenu(e) {
+  document.getElementById("pending").checked = false;
   var allRows = getNumberOfFlights(direction);
-  if (this.value == "allRows") {
-    // количество строк
-    rows = allRows;
-  } else {
-    rows = this.value;
-  }
-  oldRows =
-    document.getElementById("table").getElementsByTagName("tr").length - 1;
-  clearTable(oldRows);
-  drawTable(direction, rows, status, value);
+  rows = this.value == "allRows" ? allRows : parseInt(this.value, 10);
+  drawTable(direction, rows, flightStatus, searchValue);
 }
 
 function onStatusCheck(e) {
-  var checkBox = document.getElementById("pending"); // проверяем статус
-  if (checkBox.checked) {
-    status = "pending";
-  } else {
-    status = "all";
-  }
-  oldRows =
-    document.getElementById("table").getElementsByTagName("tr").length - 1;
-  clearTable(oldRows);
-  drawTable(direction, rows, status, value);
+  var checkBox = document.getElementById("pending");
+  var flightStatus = checkBox.checked ? true : false;
+  drawTable(direction, rows, flightStatus, searchValue);
 }
 
+// creating flightInfo object
 function getFlightInfo(direction, index) {
-  var time;
-  if (direction == "departure") {
-    jsonResponseType = jsonresponseDep;
-    time = jsonResponseType.schedule[index].departure;
-  } else {
-    jsonResponseType = jsonresponseArr;
-    time = jsonResponseType.schedule[index].arrival;
-  }
-  var statusMsg;
-  if (!jsonResponseType.schedule[index].is_fuzzy) {
-    // если параметр is_fuzzy = false значит рейс без задержки
-    statusMsg = "По расписанию";
-  } else {
-    statusMsg = "Рейс задерживается";
-  }
+  var jsonResponseType =
+    direction == "departure" ? jsonResponseDep : jsonResponseArr;
+  var time = jsonResponseType.schedule[index][direction];
+  var statusMsg = !jsonResponseType.schedule[index].is_fuzzy
+    ? "По расписанию"
+    : "Рейс задерживается";
   var flightInfo = {};
   flightInfo.time = time;
   flightInfo.city = jsonResponseType.schedule[index].thread.title;
@@ -235,16 +202,13 @@ function getFlightInfo(direction, index) {
   flightInfo.planeModel = jsonResponseType.schedule[index].thread.vehicle;
   flightInfo.statusMsg = statusMsg;
   return flightInfo;
-} // creating flightInfo object
-
-function getNumberOfFlights(direction) {
-  // вычисляем полное количество записей в исходном json
-  if (direction == "departure") {
-    jsonResponseType = jsonresponseDep;
-  } else {
-    jsonResponseType = jsonresponseArr;
-  }
-  return jsonResponseType.schedule.length;
 }
 
-init(); // поехали
+// calculating overall number of flight objects in original json
+function getNumberOfFlights(direction) {
+  return (direction == "departure" ? jsonResponseDep : jsonResponseArr).schedule
+    .length;
+}
+
+// let's go!
+init();

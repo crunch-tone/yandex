@@ -2,6 +2,7 @@
 <html>
   <head>
     <title>Расписание рейсов Аэропорта Санкт-Петербург "Пулково" (LED)</title>
+    <link rel="stylesheet" type="text/css" href="styles.css" />
     <meta charset="utf-8" />
   </head>
 
@@ -9,20 +10,21 @@
     <style></style>
     <div>
       <h1>Расписание рейсов Аэропорта Санкт-Петерубрг "Пулково" (LED)</h1>
-      <label for="flightnum">Поиск по номеру рейса</label>
-      <input id="flightnum" type="text" name="flightnum" value="" />
     </div>
     <div>
       <table id="table" style="width:100%">
         <tr class="selector">
-          <td colspan="2">
-            <label for="myselectdir">Направление</label>
+          <td class="centeralign">
             <select id="myselectdir" name="myselectdir">
-              <option value="departure">Отправление</option>
-              <option value="arrival">Прибытие</option>
+              <option value="departure">Вылет</option>
+              <option value="arrival">Прилёт</option>
             </select>
           </td>
-          <td colspan="2">
+          <td class="centeralign" colspan="2">
+            <label for="flightnum">Поиск по номеру рейса</label>
+            <input id="flightnum" type="text" name="flightnum" value="" />
+          </td>
+          <td>
             <label for="myselectrows">Количество рейсов</label>
             <select id="myselectrows" name="myselectrows">
               <option value="10">10</option>
@@ -31,18 +33,23 @@
               <option value="allRows">Все</option>
             </select>
           </td>
-          <td colspan="2">
+          <td colspan="2" class="centeralign">
             <label for="pending">Показать только задержанные</label
-            ><input id="pending" type="checkbox" name="pending" />
+            ><input
+              class="rightalign"
+              id="pending"
+              type="checkbox"
+              name="pending"
+            />
           </td>
         </tr>
         <tr>
-          <th>Время</th>
-          <th>Маршрут</th>
-          <th>Номер рейса</th>
-          <th>Авиакомпания</th>
-          <th>Модель самолёта</th>
-          <th>Статус рейса</th>
+          <th style="width: 10%;">Время</th>
+          <th style="width: 30%;">Маршрут</th>
+          <th style="width: 10%;">Номер рейса</th>
+          <th style="width: 20%;">Авиакомпания</th>
+          <th style="width: 15%;">Модель самолёта</th>
+          <th style="width: 15%;">Статус рейса</th>
         </tr>
       </table>
     </div>
